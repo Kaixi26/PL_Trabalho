@@ -106,16 +106,20 @@ void filetree_build(Filetree* ft){
             chdir("..");
         }
         else if(ft->children[i]->type == FT_FILE){
+            if( access( ft->children[i]->name, F_OK ) != -1 ){
+                fprintf(stderr, "File %s exists.\nExiting program...\n", ft->children[i]->name);
+                exit(1);
+            }
             FILE* file = fopen(ft->children[i]->name, "w");
             if(!file){
                 fprintf(stderr, "Failed opening %s.\nExiting program...\n", ft->children[i]->name);
-                exit(4);
+                exit(1);
             }
             fprintf(file, "%s", string_get(ft->children[i]->contents));
             fflush(file);
             if(fclose(file)){
                 fprintf(stderr, "Failed writing to file %s.\nExiting program...\n", ft->children[i]->name);
-                exit(5);
+                exit(1);
             }
         }
     }

@@ -11,6 +11,8 @@ ln [A-Za-z0-9_]
 
 %{
     #include <ctype.h>
+    #include <unistd.h>
+    #include <fcntl.h>
     #include "metadata.h"
     #include "metastate.h"
     #include "filetree.h"
@@ -132,21 +134,38 @@ ln [A-Za-z0-9_]
 
 
 <*><<EOF>> {
-    return(0);
+    yyterminate();
 }
 
 %%
 
 int main(int argc, char** argv){
+    if(argc < 2){
+        printf("Usage:\n");
+        printf("%s <project_name> < <input_file>\n", argv[0]);
+        printf("%s <project_name> <input_file>\n", argv[0]);
+        exit(0);
+    }
+    if(argc == 3){
+        int fd = open(argv[2], O_RDONLY);
+        if(fd == -1){
+            fprintf(stderr, "Could not open file %s.", argv[2]);
+            exit(1);
+        }
+        dup2(fd, STDIN_FILENO);
+    }
     metadata = metadata_init();
     filetree = filetree_init();
-    if(argc >= 2) metadata_put(metadata, "name", argv[1]);
+    metadata_put(metadata, "name", argv[1]);
 
     yylex();
 
     filetree = filetree_toroot(filetree);
     filetree_build(filetree);
-    //filetree_print(filetree);
+
+    metadata_free(metadata);
+    filetree_free(filetree);
+    close(STDIN_FILENO);
 
     return(0);
 }

@@ -14,7 +14,7 @@ cenas:lulw
 
 === {%name%}/Makefile
 {%name%} : gcc -o {%name%} {%name%}.c
-===main.c
+=== {%name%}/src/main.c
 
 int main(int argc, char** argv){
     return 0;
