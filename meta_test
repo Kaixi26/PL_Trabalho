@@ -1,0 +1,21 @@
+=== meta
+# this is a comment
+
+email: jj@di.uminho.pt
+author: J.Joao
+cenas:lulw
+# >print
+
+=== tree
+{%name%}/
+-src/
+--main.c
+-Makefile
+
+=== {%name%}/Makefile
+{%name%} : gcc -o {%name%} {%name%}.c
+===main.c
+
+int main(int argc, char** argv){
+    return 0;
+}
