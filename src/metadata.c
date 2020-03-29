@@ -11,8 +11,8 @@ Metadata* metadata_init(){
 
 void metadata_expand(Metadata* m){
     m->size *= 2;
-    m->keys = reallocarray(m->keys, m->size, sizeof(const char*));
-    m->vals = reallocarray(m->vals, m->size, sizeof(const char*));
+    m->keys = realloc(m->keys, m->size * sizeof(const char*));
+    m->vals = realloc(m->vals, m->size * sizeof(const char*));
 }
 
 void metadata_put(Metadata* m, const char* key, const char* value){

@@ -19,7 +19,7 @@ Filetree* filetree_init(){
 void filetree_expand(Filetree* ft){
     if(ft->size == 0) ft->size = 1;
     else ft->size *= 2;
-    ft->children = reallocarray(ft->children, ft->size, sizeof(Filetree*));
+    ft->children = realloc(ft->children, ft-> size * sizeof(Filetree*));
 }
 
 int filetree_mkdir(Filetree* ft, const char* name){

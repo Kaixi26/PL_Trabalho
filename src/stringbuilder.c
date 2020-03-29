@@ -9,7 +9,7 @@ Stringbuilder* string_init(){
 }
 void string_expand(Stringbuilder* sb){
     sb->size *= 2;
-    sb->str = reallocarray(sb->str, sb->size, sizeof(char));
+    sb->str = realloc(sb->str, sb->size * sizeof(char));
 }
 
 void string_append(Stringbuilder* sb, const char* source){
