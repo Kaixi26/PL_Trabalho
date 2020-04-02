@@ -67,10 +67,13 @@ ERR:
 }
 
 void metadata_free(Metadata* m){
-    if(m)
+    if(m){
         for(int i=0; i<m->next; i++){
             free(m->keys[i]);
             free(m->vals[i]);
         }
+        free(m->keys);
+        free(m->vals);
+    }
     free(m);
 }

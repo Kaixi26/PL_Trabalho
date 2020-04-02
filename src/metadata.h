@@ -10,6 +10,7 @@ typedef struct {
     char** vals;
 } Metadata;
 
+/* Allocates memory needed for structure and returns pointer to it */
 Metadata* metadata_init();
 const char* metadata_get(Metadata*, const char* key);
 void metadata_put(Metadata*, const char* key, const char* value);

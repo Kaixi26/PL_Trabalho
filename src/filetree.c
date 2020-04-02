@@ -131,6 +131,7 @@ void filetree_free(Filetree* ft){
         string_free(ft->contents);
         for(int i=0; i<ft->next; i++)
             filetree_free(ft->children[i]);
+        free(ft->children);
     }
     free(ft);
 }

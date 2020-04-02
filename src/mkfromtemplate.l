@@ -104,7 +104,8 @@ ln [A-Za-z0-9_]
     }
     IF_LOG
         printf("Added %s %s, current depth %d.\n", slashes ? "folder" : "file", name, filetree_depth);
-
+    free(tmp);
+    string_free(sb);
 }
 
 <META>#>print{ws}*\n {
