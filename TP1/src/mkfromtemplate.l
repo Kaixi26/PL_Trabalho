@@ -1,4 +1,5 @@
 %option noyywrap
+%option yylineno
 
 %x META TREE WR_FILE
 
@@ -125,7 +126,9 @@ ln [A-Za-z0-9_]
     LOG("Found variable.");
 }
 
-<META>.*\n LOG("LINE WITHOUT EFFECT.");
+<META>{ws}*\n LOG("LINE WITHOUT EFFECT.");
+
+<META>.*\n {fprintf(stderr, "error parsing meta %d\n", yylineno); exit(0);}
 
 ^\=\=\=\ meta\n {
     LOG("Entering meta.");

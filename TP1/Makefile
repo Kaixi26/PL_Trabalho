@@ -1,4 +1,4 @@
-LOG=-D LOG_1
+LOG=-D LOG_0
 CFLAGS=-pedantic -W -Wall -Wextra
 
 SRC=src
