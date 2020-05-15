@@ -1,0 +1,25 @@
+
+String
+    Basic strings
+        excape characters (not implemented)
+    Multi-line basic strings (not implemented)
+    Literal strings (not implemented)
+    Multi-line literal strings (not implemented)
+
+Integer
+    whole numbers (implemented)
+    with underscore (implemented)
+    hex/octal/binary (not implemented)
+
+Float
+    fractional (implemented)
+    exponent (implemented)
+    infinity (not implemented)
+    not a number (not implemented)
+
+Boolean
+    true (implemented)
+    false (implemented)
+
+Array (implemented)
+    comentarios? (not implemented)
