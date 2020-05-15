@@ -53,8 +53,10 @@ extern int yydebug;
     VTRUE = 259,
     VFALSE = 260,
     tinteger = 261,
-    tstring = 262,
-    tfloat = 263
+    tstring_basic = 262,
+    tfloat = 263,
+    tkey_bare = 264,
+    ttable_basic = 265
   };
 #endif
 /* Tokens.  */
@@ -62,20 +64,22 @@ extern int yydebug;
 #define VTRUE 259
 #define VFALSE 260
 #define tinteger 261
-#define tstring 262
+#define tstring_basic 262
 #define tfloat 263
+#define tkey_bare 264
+#define ttable_basic 265
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 9 "src/toml2json.y"
+#line 8 "src/toml2json.y"
 
     int vint;
     double vdouble;
     char* vstr;
 
-#line 79 "src/y.tab.h"
+#line 83 "src/y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -1,6 +1,5 @@
 %{
 #include <stdio.h>
-#include "tomlfloat.h"
 extern int yylex();
 extern int yylineno;
 int yyerror();
@@ -13,17 +12,27 @@ int yyerror();
 }
 
 %token ERRO VTRUE VFALSE
-%token tinteger tstring tfloat;
+%token tinteger tstring_basic tfloat;
+%token tkey_bare
+%token ttable_basic
 %type <vint> tinteger;
-%type <vstr> tstring;
+%type <vstr> tkey_bare ttable_basic tstring_basic;
 %type <vdouble> tfloat;
 
 %%
 
 Parser 
-    : Values
+    : KeyValuePair
     ;
 
+KeyValuePair
+    : Key '=' Value
+    ;
+
+Key
+    : tkey_bare
+    | tstring_basic
+    ;
 
 Value
     : String
@@ -34,7 +43,7 @@ Value
     ;
 
 String
-    : tstring
+    : tstring_basic
     ;
 
 Integer
