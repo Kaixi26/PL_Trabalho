@@ -1,4 +1,5 @@
 %{
+#include "tomlValue.h"
 #include "y.tab.h"
 #include "strings.h"
 #include <math.h>
@@ -6,9 +7,14 @@
 %option noyywrap
 %option yylineno
 %%
-[ \t\n\r] ;
+[ \t\r] ;
 
 [,\[\]=] return *yytext;
+
+\n+ { return NEWLINES; };
+
+    /* Commented Line */
+#.*\n ;
 
     /* Match float value infinity with optional plus or minus sign */
     /* i.e. inf; +inf; -inf */
@@ -27,11 +33,33 @@ true return VTRUE;
 
 false return VFALSE;
 
+
+    /* Match a simple integer */
+    /* i.e. +99; 42; 0; -17 */
+[-+]?[0-9]+ {
+        yylval.vint = atoi(yytext);
+        return tinteger;
+    } 
+
     /* Matches a bare key (not dotted nor quoted) */
     /* i.e. bare_key; bare-key; 1234*/
 [A-Za-z0-9_-]+ {
         yylval.vstr = strdup(yytext);
         return tkey_bare;
+    }
+
+    /* Matches a dotted key */
+    /* i.e. dotted.key */
+[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+ {
+        yylval.vstr = strdup(yytext);
+        return tkey_dotted;
+    }
+
+    /* Match floating point value with fractional (and/or) exponent part */
+    /* i.e. +3.1415; 5e+22; 6.626e-34 */
+[-+]?[0-9]+(\.[0-9]+)+([eE][+-]?[0-9]+)? {
+        yylval.vdouble = atof(yytext);
+        return tfloat;
     }
 
     /* Match basic string inside quotes " */
@@ -41,27 +69,12 @@ false return VFALSE;
         return tstring_basic;
     }
 
-    /* Match a simple integer */
-    /* i.e. +99; 42; 0; -17 */
-[-+]?[0-9]+ {
-        yylval.vint = atoi(yytext);
-        return tinteger;
-    }
-
     /* Match an integer separated by underscores */
     /* i.e. 5_349_221; 1_2_3_4_5 */
 [-+]?[0-9]+(\_[0-9]+)+ {
         strrmc(yytext, '_');
         yylval.vint = atoi(yytext);
         return tinteger;
-    }
-
-    /* Match floating point value with fractional (and/or) exponent part */
-    /* i.e. +3.1415; 5e+22; 6.626e-34 */
-[-+]?[0-9]+(\.[0-9]+)+([eE][+-]?[0-9]+)? {
-        //yylval.num = atof(yytext);
-        //yyval.type = TOML_FLOAT_TYPE_NUM;
-        return tfloat;
     }
 
 

@@ -1,5 +1,5 @@
 LOG=-D LOG_0
-CFLAGS=-pedantic -W -Wall -Wextra
+CFLAGS=-pedantic -W -Wall -Wextra -g
 
 SRC=src
 NAME=toml2json
