@@ -5,6 +5,8 @@
 #include <math.h>
 %}
 %option noyywrap
+%option noinput
+%option nounput
 %option yylineno
 %%
 [ \t\r] ;

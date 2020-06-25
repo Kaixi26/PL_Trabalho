@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include "tomlValue.h"
+#include "valueTree.h"
 extern int yylex();
 extern int yylineno;
 int yyerror();
@@ -30,27 +31,25 @@ t_toml_keyvalues* parsedKeyValues;
 %%
 
 Parser 
-    : Tables { parsedKeyValues = $1; }
-    | NEWLINES Tables { parsedKeyValues = $2; }
-    | KeyValuePairs Tables { parsedKeyValues = t_toml_keyvalues_merge($1, $2); }
-    | NEWLINES KeyValuePairs Tables { parsedKeyValues = t_toml_keyvalues_merge($2, $3); }
+    : MaybeNEWLINES Tables { parsedKeyValues = $2; }
+    | MaybeNEWLINES KeyValuePairs { parsedKeyValues = $2; }
+    | MaybeNEWLINES KeyValuePairs Tables { parsedKeyValues = t_toml_keyvalues_merge($2, $3); }
+    | MaybeNEWLINES { parsedKeyValues = t_toml_keyvalues_init(); }
     ;
 
 Tables
-    : Table Tables { $$ = t_toml_keyvalues_merge($1, $2); }
+    : Tables Table { $$ = t_toml_keyvalues_merge($1, $2); }
     | Table { $$ = $1; }
     ;
 
 Table
-    : '[' Key ']' NEWLINES KeyValuePairs { $$ = $5; t_toml_keyvalues_prepend($$, $2); }
-    | '[' Key ']' NEWLINES { $$ = t_toml_keyvalues_init(); }
-    | '[' Key ']' { $$ = t_toml_keyvalues_init(); }
+    : '[' Key ']' NEWLINES KeyValuePairs { $$ = $5; t_toml_keyvalues_prepend($$, $2); free($2); }
+    | '[' Key ']' MaybeNEWLINES { $$ = t_toml_keyvalues_init(); }
     ;
 
 KeyValuePairs
-    : KeyValuePair NEWLINES KeyValuePairs { $$ = $3; t_toml_keyvalues_insert($$, $1); }
-    | KeyValuePair NEWLINES { $$ = t_toml_keyvalues_init(); t_toml_keyvalues_insert($$, $1); }
-    | KeyValuePair      { $$ = t_toml_keyvalues_init(); t_toml_keyvalues_insert($$, $1); }
+    : KeyValuePairs KeyValuePair MaybeNEWLINES { $$ = $1; t_toml_keyvalues_insert($$, $2); }
+    | KeyValuePair MaybeNEWLINES { $$ = t_toml_keyvalues_init(); t_toml_keyvalues_insert($$, $1); }
     ;
 
 KeyValuePair
@@ -89,13 +88,13 @@ Boolean
     ;
 
 Array
-    : '[' ']' { $$ = t_tomlv_fromArr(t_toml_arr_init()); }
-    | '[' Values ']' { $$ = $2; }
+    : '[' MaybeNEWLINES ']' { $$ = t_tomlv_fromArr(t_toml_arr_init()); }
+    | '[' MaybeNEWLINES Values ']' { $$ = $3; }
     ;
 
 Values
-    : Values ',' Value {$$ = $1; t_toml_arr_append($$.val.varr, $3); }
-    | Value { $$ = t_tomlv_fromArr(t_toml_arr_init()); t_toml_arr_append($$.val.varr, $1); }
+    : Values ',' MaybeNEWLINES Value MaybeNEWLINES {$$ = $1; t_toml_arr_append($$.val.varr, $4); }
+    | Value MaybeNEWLINES { $$ = t_tomlv_fromArr(t_toml_arr_init()); t_toml_arr_append($$.val.varr, $1); }
     ;
 
 MaybeNEWLINES
@@ -105,12 +104,18 @@ MaybeNEWLINES
 
 
 %%
+
 int main(){
-    yyparse();
-    return 0;
+    int err;
+    if(!(err = yyparse())){
+        //t_toml_keyvalues_print(parsedKeyValues);
+        valueTree* vtree = valueTree_fromKeyValues(parsedKeyValues);
+        valueTree_print(vtree);
+    }
+    return err;
 }
 
 int yyerror(){
-    printf("Erro sintatico na linha %d.\n", yylineno);
-    return 0;
+    fprintf(stderr, "Erro sintatico na linha %d.\n", yylineno);
+    return 1;
 }
