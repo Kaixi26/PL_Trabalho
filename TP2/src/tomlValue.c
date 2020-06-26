@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "tomlValue.h"
+#include <math.h>
 #include <string.h>
 
 t_tomlv t_tomlv_fromInt(int v){
@@ -56,7 +57,10 @@ void t_tomlv_jsonPrint(t_tomlv v){
             printf("%d", v.val.vint);
             break;
         case TOMLVALUE_DOUBLE:
-            printf("%f", v.val.vdouble);
+            if(isnan(v.val.vdouble)) printf("\"nan\"");
+            else if(v.val.vdouble == -INFINITY) printf("\"-inf\"");
+            else if(v.val.vdouble == +INFINITY) printf("\"+inf\"");
+            else printf("%f", v.val.vdouble);
             break;
         case TOMLVALUE_BOOL:
             printf("%s", v.val.vbool ? "true" : "false");
@@ -71,7 +75,7 @@ void t_tomlv_jsonPrint(t_tomlv v){
                 t_tomlv_jsonPrint(v.val.varr->vals[i]);
                 printf(", ");
             }
-            if(i != 0){
+            if(i != 0 || v.val.varr->next == 1){
                 t_tomlv_jsonPrint(v.val.varr->vals[i]);
                 printf(" ");
             }

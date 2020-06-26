@@ -1,9 +1,13 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 #include "tomlValue.h"
 #include "valueTree.h"
 extern int yylex();
 extern int yylineno;
+extern void strrmc(char*, char);
 int yyerror();
 
 t_toml_keyvalues* parsedKeyValues;
@@ -19,10 +23,10 @@ t_toml_keyvalues* parsedKeyValues;
     t_toml_keyvalues* vkps;
 }
 
-%token ERRO VTRUE VFALSE NEWLINES
-%token <vint> tinteger;
+%token ERRO VTRUE VFALSE
+%token <vstr> tinteger tinteger_underscored;
 %token <vdouble> tfloat;
-%token <vstr> tkey_bare tkey_dotted ttable_basic tstring_basic;
+%token <vstr> tkey_bare tkey_dotted ttable_basic tstring_basic date;
 %type <vstr> Key
 %type <vtoml> String Integer Float Boolean Array Value Values
 %type <vkp> KeyValuePair
@@ -31,10 +35,10 @@ t_toml_keyvalues* parsedKeyValues;
 %%
 
 Parser 
-    : MaybeNEWLINES Tables { parsedKeyValues = $2; }
-    | MaybeNEWLINES KeyValuePairs { parsedKeyValues = $2; }
-    | MaybeNEWLINES KeyValuePairs Tables { parsedKeyValues = t_toml_keyvalues_merge($2, $3); }
-    | MaybeNEWLINES { parsedKeyValues = t_toml_keyvalues_init(); }
+    : MaybeNewlines Tables { parsedKeyValues = $2; }
+    | MaybeNewlines KeyValuePairs { parsedKeyValues = $2; }
+    | MaybeNewlines KeyValuePairs Tables { parsedKeyValues = t_toml_keyvalues_merge($2, $3); }
+    | MaybeNewlines { parsedKeyValues = t_toml_keyvalues_init(); }
     ;
 
 Tables
@@ -43,13 +47,13 @@ Tables
     ;
 
 Table
-    : '[' Key ']' NEWLINES KeyValuePairs { $$ = $5; t_toml_keyvalues_prepend($$, $2); free($2); }
-    | '[' Key ']' MaybeNEWLINES { $$ = t_toml_keyvalues_init(); }
+    : '[' Key ']' Newlines KeyValuePairs { $$ = $5; t_toml_keyvalues_prepend($$, $2); free($2); }
+    | '[' Key ']' MaybeNewlines { $$ = t_toml_keyvalues_init(); }
     ;
 
 KeyValuePairs
-    : KeyValuePairs KeyValuePair MaybeNEWLINES { $$ = $1; t_toml_keyvalues_insert($$, $2); }
-    | KeyValuePair MaybeNEWLINES { $$ = t_toml_keyvalues_init(); t_toml_keyvalues_insert($$, $1); }
+    : KeyValuePairs KeyValuePair MaybeNewlines { $$ = $1; t_toml_keyvalues_insert($$, $2); }
+    | KeyValuePair MaybeNewlines { $$ = t_toml_keyvalues_init(); t_toml_keyvalues_insert($$, $1); }
     ;
 
 KeyValuePair
@@ -59,7 +63,9 @@ KeyValuePair
 Key
     : tkey_bare     { $$ = $1; }
     | tkey_dotted   { $$ = $1; }
-    | tstring_basic { $$ = $1; }
+    | tstring_basic { $$ = calloc(strlen($1), sizeof(char)); sprintf($$, "\"%s\"", $1); free($1); }
+    | tinteger      { $$ = $1; }
+    | tinteger_underscored { $$ = $1; }
     ;
 
 Value
@@ -72,10 +78,12 @@ Value
 
 String
     : tstring_basic { $$ = t_tomlv_fromStr($1); }
+    | date {$$ = t_tomlv_fromStr($1); }
     ;
 
 Integer
-    : tinteger { $$ = t_tomlv_fromInt($1); }
+    : tinteger { $$ = t_tomlv_fromInt(atoi($1)); free($1); }
+    | tinteger_underscored {  strrmc($1, '_'); $$ = t_tomlv_fromInt(atoi($1)); free($1); }
     ;
 
 Float
@@ -88,34 +96,40 @@ Boolean
     ;
 
 Array
-    : '[' MaybeNEWLINES ']' { $$ = t_tomlv_fromArr(t_toml_arr_init()); }
-    | '[' MaybeNEWLINES Values ']' { $$ = $3; }
+    : '[' MaybeNewlines ']' { $$ = t_tomlv_fromArr(t_toml_arr_init()); }
+    | '[' MaybeNewlines Values ']' { $$ = $3; }
+    | '[' MaybeNewlines Values ',' MaybeNewlines ']' { $$ = $3; }
     ;
 
 Values
-    : Values ',' MaybeNEWLINES Value MaybeNEWLINES {$$ = $1; t_toml_arr_append($$.val.varr, $4); }
-    | Value MaybeNEWLINES { $$ = t_tomlv_fromArr(t_toml_arr_init()); t_toml_arr_append($$.val.varr, $1); }
+    : Values ',' MaybeNewlines Value MaybeNewlines {$$ = $1; t_toml_arr_append($$.val.varr, $4); }
+    | Value MaybeNewlines { $$ = t_tomlv_fromArr(t_toml_arr_init()); t_toml_arr_append($$.val.varr, $1); }
     ;
 
-MaybeNEWLINES
-    : NEWLINES
+MaybeNewlines
+    : Newlines
     |
+    ;
+
+Newlines
+    : Newlines '\n'
+    | '\n'
     ;
 
 
 %%
 
+valueTree* vtree;
 int main(){
-    int err;
-    if(!(err = yyparse())){
-        //t_toml_keyvalues_print(parsedKeyValues);
-        valueTree* vtree = valueTree_fromKeyValues(parsedKeyValues);
-        valueTree_print(vtree);
-    }
-    return err;
+    int err = yyparse();
+    if(err) return err;
+    vtree = valueTree_fromKeyValues(parsedKeyValues);
+    valueTree_print(vtree);
+    printf("\n");
+    return 0;
 }
 
 int yyerror(){
-    fprintf(stderr, "Erro sintatico na linha %d.\n", yylineno);
+    fprintf(stderr, "Syntax error: Line %d.\n", yylineno);
     return 1;
 }

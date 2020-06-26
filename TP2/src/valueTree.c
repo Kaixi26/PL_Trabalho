@@ -50,18 +50,27 @@ int valueTree_node_insertNode(valueTree* vt, char* key, char* nextKey, t_tomlv v
 
 int valueTree_node_insert(valueTree* vt, char* key, t_tomlv value){
     if(vt->isLeaf) return 1;
-    char* nextKey = strrchr(key, '.');
+    int isQuotted = key[0] == '"' || key[0] == '\'';
+    char* nextKey;
+    char* quotes;
+    if(!isQuotted) nextKey = strchr(key, '.');
+    else {
+        quotes = strchr(key+1, key[0]);
+        nextKey = strchr(quotes, '.');
+        *quotes = 0;
+    }
+    int ret = 0;
     if(nextKey){
         *nextKey = 0;
-        int ret = valueTree_node_insertNode(vt, key, nextKey+1, value);
+        ret = valueTree_node_insertNode(vt, isQuotted ? (key+1) : key, nextKey+1, value);
         *nextKey = '.';
-        return ret;
     } else {
         for(int i=0; i < vt->value.children->next; i++)
-            if(!strcmp(key, vt->value.children->child[i]->key)) return 2;
-        treeChildren_insert(vt->value.children , valueTree_init_leaf(key, value));
+            if(!strcmp(isQuotted ? (key+1) : key, vt->value.children->child[i]->key)) return 2;
+        treeChildren_insert(vt->value.children , valueTree_init_leaf(strdup(isQuotted ? (key+1) : key), value));
     }
-    return 0;
+    if(isQuotted) *quotes = key[0];
+    return ret;
 }
 
 valueTree* valueTree_fromKeyValues(t_toml_keyvalues* kvs){
@@ -76,13 +85,22 @@ void valueTree_printAux(valueTree* vt, int depth){
     for(int i=0; i<depth; i++)
         printf("\t");
     if(!vt->isLeaf){
-        printf("%s\n", vt->key ? vt->key : "root");
-        for(int i=0; i<vt->value.children->next; i++)
+        if(vt->key) printf("\"%s\": {\n", vt->key);
+        else printf("{\n");
+        for(int i=0; i<vt->value.children->next-1; i++){
             valueTree_printAux(vt->value.children->child[i], depth+1);
+            printf(",\n");
+        }
+        if(vt->value.children->next){
+            valueTree_printAux(vt->value.children->child[vt->value.children->next-1], depth+1);
+            printf("\n");
+        }
+        for(int i=0; i<depth; i++)
+            printf("\t");
+        printf("}");
     } else {
-        printf("%s : ", vt->key);
+        printf("\"%s\": ", vt->key);
         t_tomlv_jsonPrint(vt->value.value);
-        printf("\n");
     }
 }
 
