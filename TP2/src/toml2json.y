@@ -48,7 +48,7 @@ Tables
 
 Table
     : '[' Key ']' Newlines KeyValuePairs { $$ = $5; t_toml_keyvalues_prepend($$, $2); free($2); }
-    | '[' Key ']' Newlines { $$ = t_toml_keyvalues_init(); }
+    | '[' Key ']' Newlines { $$ = t_toml_keyvalues_init(); free($2); }
     ;
 
 KeyValuePairs
