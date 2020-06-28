@@ -76,7 +76,10 @@ int valueTree_node_insert(valueTree* vt, char* key, t_tomlv value){
 valueTree* valueTree_fromKeyValues(t_toml_keyvalues* kvs){
     valueTree* ret = valueTree_init_node(NULL);
     for(int i=0; i < kvs->next; i++)
-        valueTree_node_insert(ret, kvs->kvs[i]->key, kvs->kvs[i]->value);
+        if(valueTree_node_insert(ret, kvs->kvs[i]->key, kvs->kvs[i]->value)){
+            fprintf(stderr, "Duplicate key: %s.\n", kvs->kvs[i]->key);
+            exit(1);
+        }
 
     return ret;
 }

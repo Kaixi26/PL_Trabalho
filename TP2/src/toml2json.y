@@ -26,7 +26,7 @@ t_toml_keyvalues* parsedKeyValues;
 %token ERRO VTRUE VFALSE
 %token <vstr> tinteger tinteger_underscored;
 %token <vdouble> tfloat;
-%token <vstr> tkey_bare tkey_dotted ttable_basic tstring_basic date;
+%token <vstr> tkey_bare tkey_dotted tstring_basic date;
 %type <vstr> Key
 %type <vtoml> String Integer Float Boolean Array Value Values
 %type <vkp> KeyValuePair
@@ -48,12 +48,12 @@ Tables
 
 Table
     : '[' Key ']' Newlines KeyValuePairs { $$ = $5; t_toml_keyvalues_prepend($$, $2); free($2); }
-    | '[' Key ']' MaybeNewlines { $$ = t_toml_keyvalues_init(); }
+    | '[' Key ']' Newlines { $$ = t_toml_keyvalues_init(); }
     ;
 
 KeyValuePairs
-    : KeyValuePairs KeyValuePair MaybeNewlines { $$ = $1; t_toml_keyvalues_insert($$, $2); }
-    | KeyValuePair MaybeNewlines { $$ = t_toml_keyvalues_init(); t_toml_keyvalues_insert($$, $1); }
+    : KeyValuePairs KeyValuePair Newlines { $$ = $1; t_toml_keyvalues_insert($$, $2); }
+    | KeyValuePair Newlines { $$ = t_toml_keyvalues_init(); t_toml_keyvalues_insert($$, $1); }
     ;
 
 KeyValuePair

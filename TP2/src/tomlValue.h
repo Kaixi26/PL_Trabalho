@@ -17,7 +17,7 @@ typedef struct t_tomlv {
         char* vstr;
         t_toml_arr* varr;
     } val;
-    char code;    
+    char code; /* representa o tipo de dados guardado */
 } t_tomlv;
 
 struct t_toml_arr {
